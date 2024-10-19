@@ -1,0 +1,7 @@
+{
+  "name": "Signa",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
