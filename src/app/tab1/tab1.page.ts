@@ -9,7 +9,7 @@ import * as handpose from '@tensorflow-models/handpose';
 })
 export class Tab1Page implements OnInit, AfterViewInit {
   @ViewChild('videoElement', { static: false }) videoElement!: ElementRef;
-  recognizedText: string = '';
+  recognizedText: string = ''; // Store recognized signs
   private model: any;
   private video!: HTMLVideoElement;
   private mediaStream: MediaStream | null = null; // To hold the media stream
@@ -74,7 +74,6 @@ export class Tab1Page implements OnInit, AfterViewInit {
         this.ngZone.run(() => {
           // Process predictions to convert to text
           this.recognizedText = this.convertPredictionsToText(predictions);
-          console.log('Predictions:', predictions); // Log predictions for debugging
         });
       } else {
         this.ngZone.run(() => {
@@ -91,31 +90,108 @@ export class Tab1Page implements OnInit, AfterViewInit {
   convertPredictionsToText(predictions: any): string {
     // Check if there are any predictions
     if (predictions.length === 0) {
-        return 'No hands detected';
+      return 'No hands detected';
     }
 
     // Get the landmarks (keypoints) from the first prediction
-    const landmarks = predictions[0].landmarks; // Access landmarks instead of keypoints
+    const landmarks = predictions[0].landmarks;
 
     // Ensure there are enough landmarks
-    if (!landmarks || landmarks.length < 21) { // Check if we have at least 21 landmarks
-        return 'Insufficient keypoints';
+    if (!landmarks || landmarks.length < 21) {
+      return 'Insufficient keypoints';
     }
 
-    const thumb = landmarks[4]; // Thumb landmark
-    const indexFinger = landmarks[8]; // Index finger landmark
-    const middleFinger = landmarks[12]; // Middle finger landmark
+    // Define gesture detection logic
+    const gestures = {
+      'Thumbs Up': () => this.isThumbsUp(landmarks),
+      'Peace Sign': () => this.isPeaceSign(landmarks),
+      'Thank You': () => this.isThankYou(landmarks),
+      'I Love You': () => this.isILoveYou(landmarks),
+      'Sorry': () => this.isSorry(landmarks),
+      'Hello': () => this.isHello(landmarks),
+      'Goodbye': () => this.isGoodbye(landmarks),
+      'Yes': () => this.isYes(landmarks),
+      'No': () => this.isNo(landmarks),
+      'Help': () => this.isHelp(landmarks), // Add Help gesture
+    };
 
-    // Detect Thumbs Up
-    if (thumb[1] < indexFinger[1] && thumb[2] > indexFinger[2] && thumb[2] > middleFinger[2]) {
-        return 'Thumbs Up';
-    }
-
-    // Detect Peace Sign
-    if (indexFinger[1] < middleFinger[1] && indexFinger[2] < middleFinger[2]) {
-        return 'Peace Sign';
+    // Check each gesture
+    for (const [gesture, detectionFunc] of Object.entries(gestures)) {
+      if (detectionFunc()) {
+        return gesture; // Return the first recognized gesture
+      }
     }
 
     return 'No recognizable gesture detected'; // Fallback for when no gestures are matched
-}
+  }
+
+  // Gesture detection functions
+  isThumbsUp(landmarks: any): boolean {
+    const thumb = landmarks[4];
+    const indexFinger = landmarks[8];
+
+    return thumb[1] < indexFinger[1] && thumb[2] < indexFinger[2]; // Adjusted logic for thumbs up
+  }
+
+  isPeaceSign(landmarks: any): boolean {
+    const indexFinger = landmarks[8];
+    const middleFinger = landmarks[12];
+
+    return indexFinger[2] < middleFinger[2] && indexFinger[1] < middleFinger[1]; // Adjusted logic for peace sign
+  }
+
+  isThankYou(landmarks: any): boolean {
+    const thumb = landmarks[4];
+    const indexFinger = landmarks[8];
+
+    return thumb[2] > indexFinger[2]; // Check if the thumb is above the index finger
+  }
+
+  isILoveYou(landmarks: any): boolean {
+    const thumb = landmarks[4];
+    const indexFinger = landmarks[8];
+    const pinky = landmarks[20]; // Pinky is the 20th landmark
+
+    return thumb[2] < indexFinger[2] && pinky[2] > indexFinger[2]; // Check thumb and pinky position
+  }
+
+  isSorry(landmarks: any): boolean {
+    return landmarks.length === 21; // Check if the model detected all landmarks and add specific logic if needed
+  }
+
+  isHello(landmarks: any): boolean {
+    return landmarks[4][1] < landmarks[8][1]; // Check if the thumb is raised above the index finger
+  }
+
+  isGoodbye(landmarks: any): boolean {
+    return landmarks[4][1] < landmarks[8][1] && landmarks[8][1] < landmarks[12][1]; // Hand motion logic
+  }
+
+  isYes(landmarks: any): boolean {
+    const thumb = landmarks[4];
+    const indexFinger = landmarks[8];
+
+    return thumb[1] < indexFinger[1]; // Logic for confirming
+  }
+
+  isNo(landmarks: any): boolean {
+    const thumb = landmarks[4];
+    const indexFinger = landmarks[8];
+
+    return thumb[1] > indexFinger[1]; // Logic for negation
+  }
+
+  isHelp(landmarks: any): boolean {
+    const thumb = landmarks[4];
+    const indexFinger = landmarks[8];
+    const middleFinger = landmarks[12];
+    const wrist = landmarks[0]; // Correctly get the wrist landmark
+
+    // Check if the fist (thumb and fingers) is below the open hand (palm facing down)
+    return (
+      thumb[1] < wrist[1] && // Thumb below wrist
+      indexFinger[1] > wrist[1] && // Index finger above wrist
+      middleFinger[1] > wrist[1] // Middle finger above wrist
+    );
+  }
 }
