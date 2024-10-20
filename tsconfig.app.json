@@ -1,17 +1,16 @@
 /* To learn more about this file see: https://angular.io/config/tsconfig. */
-/* To learn more about this file see: https://angular.io/config/tsconfig. */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": ["long"] // Add "long" here
+    "types": ["jest", "mocha"]
   },
   "files": [
-    "src/main.ts",
+    "src/test.ts",
     "src/polyfills.ts"
   ],
   "include": [
-    "src/**/*.d.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.d.ts"
   ]
 }
