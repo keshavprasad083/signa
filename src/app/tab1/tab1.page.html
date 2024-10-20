@@ -1,17 +1,14 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
+    <ion-title>Sign Language Translator</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+<ion-content>
+  <video #videoElement width="100%" autoplay></video>
+  <ion-button (click)="startCamera()">Start Camera</ion-button>
+  <div>
+    <h2>Recognized Text:</h2>
+    <p>{{ recognizedText }}</p>
+  </div>
 </ion-content>
